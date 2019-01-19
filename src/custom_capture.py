@@ -14,7 +14,7 @@ class CustomCapture:
     def _cam_release(self):
         self.cam.release()
 
-    def capture(self):
+    def capture(self, label=''):
         capture_data = []
         capture_labels = []
 
@@ -22,7 +22,9 @@ class CustomCapture:
         while True:
             f, img = self.cam.read()
             img = cv2.cvtColor(img, f)
-            cv2.imshow("Custom Capture", img)
+            
+            display_img = cv2.putText(cv2.flip(img, 1),  label, (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0))
+            cv2.imshow("Custom Capture", display_img)
 
             img = np.moveaxis(img, -1, 0)
 

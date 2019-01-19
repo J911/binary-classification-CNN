@@ -9,6 +9,12 @@ from custom_capture import CustomCapture
 from model import Net
 
 batch_size = 30
+learning_rate = 0.001
+momentum = 0.8
+
+model = Net()
+optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
+criterion = nn.CrossEntropyLoss()
 
 class IMGDataset(Dataset):
 
@@ -26,26 +32,27 @@ class IMGDataset(Dataset):
 def get_train_loader(dataset):
     return torch.utils.data.DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True)
 
-cc = CustomCapture()
-_train_x_data, _train_y_data = cc.capture()
+def make_dataset():
+    cc = CustomCapture()
+    _train_x_data, _train_y_data = cc.capture('training data capture')
 
-dataset = IMGDataset(_train_x_data, _train_y_data)
-train_loader = get_train_loader(dataset)
+    dataset = IMGDataset(_train_x_data, _train_y_data)
+    train_loader = get_train_loader(dataset)
 
-_test_x_data, _testy_data = cc.capture()
+    _test_x_data, _testy_data = cc.capture('test data capture')
 
-dataset = IMGDataset(_test_x_data, _testy_data)
-test_loader = get_train_loader(dataset)
+    dataset = IMGDataset(_test_x_data, _testy_data)
+    test_loader = get_train_loader(dataset)
 
-model = Net()
+    print("train_set:", len(train_loader.dataset))
+    print("test_set:", len(test_loader.dataset))
+    
+    return (IMGDataset(_train_x_data, _train_y_data), IMGDataset(_test_x_data, _testy_data))
 
-optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.8)
-criterion = nn.CrossEntropyLoss()
-
-print("TRAINING_SET:", len(train_loader.dataset))
-print("TEST_SET:", len(test_loader.dataset))
-
-def train(epoch):
+def save_model(path):
+    torch.save(model.state_dict(), path)
+    
+def train(epoch, train_loader):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = Variable(data), Variable(target)
@@ -58,7 +65,7 @@ def train(epoch):
 
         print('Epoch: {} Batch: {} Loss: {:.6f}'.format(epoch, batch_idx + 1, loss.item()))
 
-def test():
+def test(test_loader):
     model.eval()
     test_loss = 0
     correct = 0
@@ -77,6 +84,12 @@ def test():
         100. * correct / len(test_loader.dataset)))
 
 
-for epoch in range(1, 100):
-    train(epoch)
-    test()
+if __name__ == '__main__':
+    train_dataset, test_dataset = make_dataset()
+    train_loader, test_loader = get_train_loader(train_dataset), get_train_loader(test_dataset)
+
+    for epoch in range(1, 10):
+        train(epoch, train_loader)
+        test(test_loader)
+
+    save_model('./model_save')
