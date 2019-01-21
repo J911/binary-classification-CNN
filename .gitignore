@@ -1,3 +1,7 @@
 __pycache__/
 .ipynb_checkpoints/
 model_save
+.idea/encodings.xml
+.idea/vcs.xml
+.idea/workspace.xml
+.idea/deployment.xml
